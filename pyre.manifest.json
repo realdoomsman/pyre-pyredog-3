@@ -1,0 +1,35 @@
+{
+  "name": "Pyredog Meme Maker",
+  "version": "0.1.0",
+  "entry": "index.html",
+  "functions": [
+    {
+      "name": "captions",
+      "auth": false,
+      "holderOnly": false
+    },
+    {
+      "name": "wall-list",
+      "auth": false,
+      "holderOnly": false
+    },
+    {
+      "name": "save-meme",
+      "auth": true,
+      "holderOnly": false
+    },
+    {
+      "name": "gallery-list",
+      "auth": true,
+      "holderOnly": false
+    },
+    {
+      "name": "delete-meme",
+      "auth": true,
+      "holderOnly": false
+    }
+  ],
+  "holderTier": {
+    "minHoldTokens": 1000
+  }
+}
