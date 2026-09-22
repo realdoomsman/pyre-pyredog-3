@@ -133,3 +133,31 @@ test("holder-only frames and voices stay locked without the coin", async ({ page
   await expect(page.getByRole("radio", { name: "Aurora" })).toHaveCount(0);
   await expect(page.getByRole("radio", { name: "Noir" })).toHaveCount(0);
 });
+
+test("an unreadable upload shows an error and can be retried with the same file", async ({ page }) => {
+  const errors = watchConsole(page);
+  await page.goto("/");
+
+  const notAnImage = { name: "notes.txt", mimeType: "text/plain", buffer: Buffer.from("not a picture") };
+  const upload = page.getByLabel("Or your own photo");
+  await upload.setInputFiles(notAnImage);
+
+  await expect(page.getByRole("alert")).toHaveText(/could not be read as an image/);
+  // The stock picture stays selected; a bad upload never replaces the preview.
+  await expect(page.getByRole("radio", { name: "Pyredog" })).toBeChecked();
+
+  // Retrying the exact same rejected file must fire another change event, not a no-op.
+  await upload.setInputFiles(notAnImage);
+  await expect(page.getByRole("alert")).toHaveText(/could not be read as an image/);
+
+  expect(errors).toEqual([]);
+});
+
+test("the gallery has its own signed-out prompt, separate from the studio's", async ({ page }) => {
+  await page.goto("/");
+  const galleryCard = page.locator("section", { has: page.getByRole("heading", { name: "Your gallery" }) });
+
+  await expect(page.getByRole("button", { name: "Log in to save" })).toBeVisible();
+  await expect(galleryCard.getByRole("button", { name: "Log in", exact: true })).toBeVisible();
+  await expect(galleryCard.getByText("memes you save are tied to your login and stay yours.")).toBeVisible();
+});

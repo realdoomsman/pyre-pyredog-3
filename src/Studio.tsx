@@ -75,6 +75,9 @@ export function Studio({ ticker, minHold, onSaved }: StudioProps) {
       }
     } catch {
       setPhotoError("that file could not be read as an image. try a png or jpg.");
+      // Clears the input's own file list, or picking the same (rejected) file again would
+      // not fire another change event and the error would look stuck.
+      if (fileRef.current !== null) fileRef.current.value = "";
     }
   };
 
@@ -137,10 +140,15 @@ export function Studio({ ticker, minHold, onSaved }: StudioProps) {
   };
 
   const dogLabel = photo !== null ? photo.name : (dogById(spec.dogId)?.label ?? "no picture");
+  const dogLabelShort = dogLabel.length > 22 ? `${dogLabel.slice(0, 21)}…` : dogLabel;
 
   return (
     <Card
-      actions={<Chip tone="violet">{dogLabel.slice(0, 22)}</Chip>}
+      actions={
+        <Chip title={dogLabel.length > 22 ? dogLabel : undefined} tone="violet">
+          {dogLabelShort}
+        </Chip>
+      }
       description="pick a picture, add two lines, stamp a frame. nothing leaves the page until you save."
       title="Studio"
     >
