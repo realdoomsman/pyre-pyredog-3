@@ -42,6 +42,7 @@ export function Studio({ ticker, minHold, onSaved }: StudioProps) {
   const [ideas, setIdeas] = useState<CaptionsResult | null>(null);
   const [ideasBusy, setIdeasBusy] = useState(false);
   const [ideasError, setIdeasError] = useState<string | null>(null);
+  const [insertTarget, setInsertTarget] = useState<"top" | "bottom">("bottom");
 
   const [share, setShare] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -259,10 +260,19 @@ export function Studio({ ticker, minHold, onSaved }: StudioProps) {
             >
               <OptionGrid legend="Holder voices" onChange={setVoice} options={HOLDER_VOICES} value={voice} />
             </HolderGate>
-            <div>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               <Button data-testid="suggest" disabled={ideasBusy} onClick={() => void runSuggest()} size="sm">
-                {ideasBusy ? "Writing…" : "Suggest 5 captions"}
+                {ideasBusy ? "Writing…" : ideas !== null ? "Suggest 5 more" : "Suggest 5 captions"}
               </Button>
+              <OptionGrid
+                legend="Insert into"
+                onChange={(v) => setInsertTarget(v === "top" ? "top" : "bottom")}
+                options={[
+                  { value: "bottom", label: "Bottom" },
+                  { value: "top", label: "Top" },
+                ]}
+                value={insertTarget}
+              />
             </div>
             {ideasBusy ? (
               <p className="text-sm text-ink-muted" role="status">
@@ -282,13 +292,19 @@ export function Studio({ ticker, minHold, onSaved }: StudioProps) {
                   <button
                     className="rounded-card border border-border bg-surface px-3 py-2 text-left text-sm text-ink-muted transition-colors hover:border-violet hover:text-ink"
                     key={caption}
-                    onClick={() => patch({ bottomText: caption.slice(0, 100) })}
+                    onClick={() =>
+                      patch(
+                        insertTarget === "top"
+                          ? { topText: caption.slice(0, 100) }
+                          : { bottomText: caption.slice(0, 100) },
+                      )
+                    }
                     type="button"
                   >
                     {caption}
                   </button>
                 ))}
-                <p className="text-sm text-ink-faint">pick one to drop it into the bottom line.</p>
+                <p className="text-sm text-ink-faint">pick one to drop it into the {insertTarget} line.</p>
               </div>
             ) : (
               <p className="text-sm text-ink-faint">no ideas yet.</p>

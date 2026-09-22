@@ -84,15 +84,36 @@ test("an uploaded photo replaces the stock dog", async ({ page }) => {
 test("caption ideas come back five at a time", async ({ page }) => {
   await page.goto("/");
   await page.getByLabel("Caption ideas").fill("dog watching me eat toast");
-  await page.getByTestId("suggest").click();
+  const suggest = page.getByTestId("suggest");
+  await expect(suggest).toHaveText("Suggest 5 captions");
+  await suggest.click();
 
   const ideas = page.getByTestId("ideas");
   await expect(ideas).toBeVisible();
   await expect(ideas.getByRole("button")).toHaveCount(5);
 
-  // Picking an idea fills the bottom line, which is the point of the suggestions.
+  // Picking an idea fills the bottom line by default, which is the point of the suggestions.
   await ideas.getByRole("button").first().click();
   await expect(page.getByLabel("Bottom line")).not.toHaveValue("");
+
+  // Asking again is a regenerate, not a first ask.
+  await expect(suggest).toHaveText("Suggest 5 more");
+});
+
+test("caption ideas can target the top line instead", async ({ page }) => {
+  await page.goto("/");
+  await page.getByLabel("Top line").fill("");
+  await page.getByLabel("Caption ideas").fill("dog side-eyeing the treat jar");
+  await page.getByTestId("suggest").click();
+
+  const ideas = page.getByTestId("ideas");
+  await expect(ideas).toBeVisible();
+
+  await page.getByRole("radio", { name: "Top", exact: true }).check();
+  await ideas.getByRole("button").first().click();
+
+  await expect(page.getByLabel("Top line")).not.toHaveValue("");
+  await expect(page.getByLabel("Bottom line")).toHaveValue("");
 });
 
 test("saving needs a login, and the wall works signed out", async ({ page }) => {
