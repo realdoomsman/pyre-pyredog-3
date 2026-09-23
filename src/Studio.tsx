@@ -81,7 +81,8 @@ export function Studio({ ticker, minHold, onSaved }: StudioProps) {
     }
   };
 
-  const runSuggest = async (): Promise<void> => {
+  const runSuggest = async (e?: { preventDefault: () => void }): Promise<void> => {
+    e?.preventDefault();
     setIdeasBusy(true);
     setIdeasError(null);
     try {
@@ -248,7 +249,10 @@ export function Studio({ ticker, minHold, onSaved }: StudioProps) {
             />
           </div>
 
-          <div className="flex flex-col gap-3 rounded-card border border-border bg-surface-raised p-4">
+          <form
+            className="flex flex-col gap-3 rounded-card border border-border bg-surface-raised p-4"
+            onSubmit={(e) => void runSuggest(e)}
+          >
             <Input
               hint="one line about the moment, and the model writes five captions."
               label="Caption ideas"
@@ -269,7 +273,7 @@ export function Studio({ ticker, minHold, onSaved }: StudioProps) {
               <OptionGrid legend="Holder voices" onChange={setVoice} options={HOLDER_VOICES} value={voice} />
             </HolderGate>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-              <Button data-testid="suggest" disabled={ideasBusy} onClick={() => void runSuggest()} size="sm">
+              <Button data-testid="suggest" disabled={ideasBusy} size="sm" type="submit">
                 {ideasBusy ? "Writing…" : ideas !== null ? "Suggest 5 more" : "Suggest 5 captions"}
               </Button>
               <OptionGrid
@@ -317,7 +321,7 @@ export function Studio({ ticker, minHold, onSaved }: StudioProps) {
             ) : (
               <p className="text-sm text-ink-faint">no ideas yet.</p>
             )}
-          </div>
+          </form>
 
           <OptionGrid
             legend="Frame"

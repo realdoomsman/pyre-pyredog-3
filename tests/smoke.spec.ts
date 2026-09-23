@@ -153,6 +153,40 @@ test("an unreadable upload shows an error and can be retried with the same file"
   expect(errors).toEqual([]);
 });
 
+test("pressing enter in the caption field suggests ideas without a click", async ({ page }) => {
+  await page.goto("/");
+  await page.getByLabel("Caption ideas").fill("dog negotiating with the vacuum");
+  await page.getByLabel("Caption ideas").press("Enter");
+
+  const ideas = page.getByTestId("ideas");
+  await expect(ideas).toBeVisible();
+  await expect(ideas.getByRole("button")).toHaveCount(5);
+});
+
+test("server functions that need a login reject anonymous calls the same way", async ({ request }) => {
+  for (const name of ["save-meme", "gallery-list", "delete-meme"]) {
+    const res = await request.post(`/_pyre/fn/${name}`, { data: {} });
+    expect(res.ok()).toBe(true);
+    expect((await res.json()).result).toEqual({ ok: false, reason: "anon" });
+  }
+});
+
+test("a holder-only voice downgrades to deadpan for an anonymous caller", async ({ request }) => {
+  const res = await request.post("/_pyre/fn/captions", {
+    data: { vibe: "dog stares down the vacuum cleaner", voice: "noir" },
+  });
+  const { result } = await res.json();
+  expect(result.voice).toBe("deadpan");
+  expect(result.downgraded).toBe(true);
+  expect(result.captions).toHaveLength(5);
+});
+
+test("the wall-list function answers with an items array with no session at all", async ({ request }) => {
+  const res = await request.post("/_pyre/fn/wall-list", { data: {} });
+  const { result } = await res.json();
+  expect(Array.isArray(result.items)).toBe(true);
+});
+
 test("the gallery has its own signed-out prompt, separate from the studio's", async ({ page }) => {
   await page.goto("/");
   const galleryCard = page.locator("section", { has: page.getByRole("heading", { name: "Your gallery" }) });
